@@ -28,8 +28,8 @@ YELLOW = (155,155,0)
 DARKGRAY= (40,40,40)
 bgColor = BLACK
 
-STARTBUTTON= pygame.Rect(370,520,160,40)
-RESTARTBUTTON = pygame.Rect(540,520,160,40)
+STARTBUTTON= pygame.Rect(300,520,140,40)
+RESTARTBUTTON = pygame.Rect(460,520,140,40)
 
 XMARGIN = int((WINDOWWIDTH - (2*BUTTONSIZE)-BUTTONGAPSIZE)/2)
 YMARGIN = int((WINDOWHEIGHT-(2*BUTTONSIZE)-BUTTONGAPSIZE)/2)
@@ -58,6 +58,7 @@ def main():
     lastClickTime = 0 # timestamp of players button
     score = 0
     waitingForInput = False 
+    gameStarted = False
     while True: # main game loop 
         clickedButton = None 
         DISPLAYSURF.fill(bgColor)
@@ -69,6 +70,13 @@ def main():
         startSurf = BASICFONT.render("Start Game",True,WHITE)
         restartSurf = BASICFONT.render("Restart",True,WHITE)
 
+        DISPLAYSURF.blit(
+            startSurf,startSurf.get_rect(center=STARTBUTTON.center)
+        )    
+        DISPLAYSURF.blit(
+            restartSurf, restartSurf.get_rect(center=RESTARTBUTTON.center)
+        )
+
         scoreSurf = BASICFONT.render('Score: ' + str(score),1,WHITE)
         scoreRect = scoreSurf.get_rect()
         scoreRect.topleft = (WINDOWWIDTH - 100,10)
@@ -79,7 +87,20 @@ def main():
         for event in pygame.event.get():
             if event.type == MOUSEBUTTONUP:
                 mousex , mousey = event.pos
-                clickedButton = getButtonClicked(mousex , mousey)
+                if STARTBUTTON.collidepoint((mousex,mousey)):
+                    gameStarted = True
+                    pattern= []
+                    currentStep =0
+                    score =0
+                    waitingForInput = False
+                elif RESTARTBUTTON.collidepoint((mousex,mousey)):
+                    gameStarted = True
+                    pattern=[]
+                    currentStep = 0
+                    score = 0
+                    waitingForInput = False    
+                else:
+                    clickedButton = getButtonClicked(mousex , mousey)
             elif event.type == KEYDOWN:
                 if event.key == K_q:
                     clickedButton = YELLOW
@@ -90,7 +111,7 @@ def main():
                 elif event.key == K_s:
                     clickedButton = GREEN
 
-        if not waitingForInput:
+        if gameStarted and not waitingForInput:
             # play pattern
             pygame.display.update()
             pygame.time.wait(1000)
@@ -101,7 +122,7 @@ def main():
             waitingForInput = True
         else:
             # w8 for player to enter
-            if clickedButton and clickedButton == pattern[currentStep]:
+            if clickedButton is not None and clickedButton == pattern[currentStep]:
                 # pushed correct button
                 flashButtonAnimation(clickedButton)
                 currentStep += 1
@@ -114,7 +135,8 @@ def main():
                     waitingForInput = False
                     currentStep = 0 # reset back to 1st step
 
-            elif (clickedButton and clickedButton != pattern[currentStep]) or (currentStep != 0 and time.time() - TIMEOUT> lastClickTime):
+            elif (
+                clickedButton is not None and clickedButton != pattern[currentStep]) or (currentStep != 0 and time.time() - lastClickTime> TIMEOUT):
                 # wrong or timeout 
                 gameOverAnimation()
                 # reset variable for new game:
@@ -122,6 +144,7 @@ def main():
                 currentStep = 0
                 waitingForInput = False
                 score = 0
+                gameStarted = False
                 pygame.time.wait(1000)
                 changeBackgroundAnimation()
 
