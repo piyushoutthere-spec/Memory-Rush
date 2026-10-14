@@ -1,0 +1,130 @@
+import pygame
+import sys
+import time
+import random
+from pygame.locals import *
+
+FPS = 30
+WINDOWWIDTH = 900
+WINDOWHEIGHT = 600
+FLASHSPEED = 500 # MILISEC
+FLASHDELAY= 200 # MILLISEC
+BUTTONSIZE = 200
+BUTTONGAPSIZE = 30
+TIMEOUT = 4 # SEC BEFORE GAME OVER IF NO BUTTON IS PRESSED
+
+# COLORS DEFINING
+
+WHITE = (255,255,255)
+BLACK = (0,0,0)
+BRIGHTRED = (255,0,0)
+RED = (155,0,0)
+BIRGHTGREEN = (0,255,0)
+GREEN = (0,155,0)
+BRIGHTBLUE = (0,0,255)
+BLUE = (0,0,155)
+BRIGHTYELLOW = (255,255,0)
+YELLOW = (155,155,0)
+DARKGRAY= (40,40,40)
+bgColor = BLACK
+
+XMARGIN = int((WINDOWWIDTH - (2*BUTTONSIZE)-BUTTONGAPSIZE)/2)
+YMARGIN = int((WINDOWHEIGHT-(2*BUTTONSIZE)-BUTTONGAPSIZE)/2)
+
+# RECT OBJECTS FOR ALL 4 BUTTON
+
+YELLOWRECT = pygame.Rect(XMARGIN,YMARGIN,BUTTONSIZE,BUTTONSIZE)
+BLUERECT = pygame.Rect(XMARGIN + BUTTONSIZE+ BUTTONGAPSIZE, YMARGIN, BUTTONSIZE, BUTTONSIZE)
+GREENRECT = pygame.Rect(XMARGIN+BUTTONSIZE+BUTTONGAPSIZE, YMARGIN+BUTTONSIZE + BUTTONGAPSIZE, BUTTONSIZE, BUTTONSIZE)
+REDRECT = pygame.Rect(XMARGIN,YMARGIN + BUTTONSIZE + BUTTONGAPSIZE , BUTTONSIZE, BUTTONSIZE)
+
+def main():
+    global FPSCLOCK , DISPLAYSURF , BASICFONT 
+
+    pygame.init()
+    FPSCLOCK = pygame.time.Clock()
+    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
+    pygame.display.set_caption('Memory Rushh')
+    BASICFONT = pygame.font.Font('freesansbold.ttf',16)
+    infoSurf = BASICFONT.render('Match the pattern by clicking on button or using the Q,W,A,S keys',1,DARKGRAY)
+    infoRect = infoSurf.get_rect()
+    infoRect.topleft = (10, WINDOWHEIGHT -25)
+
+    pattern =[] # stores pattern
+    currentStep = 0 # color the player muct push next
+    lastClickTime = 0 # timestamp of players button
+    score = 0
+    waitingForInput = False 
+    while True: # main game loop 
+        clickedButton = None 
+        DISPLAYSURF.fill(bgColor)
+        drawButtons()
+
+        scoreSurf = BASICFONT.render('Score: ' + str(score),1,WHITE)
+        scoreRect = scoreSurf.get_rect()
+        scoreRect.topleft = (WINDOWWIDTH - 100,10)
+        DISPLAYSURF.blit (scoreSurf , scoreRect)
+        DISPLAYSURF.blit(infoSurf , infoRect)
+
+        checkForQuit()
+        for event in pygame.event.get():
+            if event.type == MOUSEBUTTONUP:
+                mousex , mousey = event.pos
+                clickedButton = getButtonClicked(mousex , mousey)
+            elif event.type == KEYDOWN:
+                if event.key == K_q:
+                    clickedButton = YELLOW
+                elif event.key == K_w:
+                    clickedButton = BLUE
+                elif event.key == K_a:
+                    clickedButton =RED
+                elif event.key == K_s:
+                    clickedButton = GREEN
+
+        if not waitingForInput:
+            # play pattern
+            pygame.display.update()
+            pygame.time.wait(1000)
+            pattern.append(random.choice((YELLOW,BLUE,RED,GREEN)))
+            for button in pattern :
+                flashButtonAnimation(button)
+                pygame.time.wait(FLASHDELAY)
+            waitingForInput = True
+        else:
+            # w8 for player to enter
+            if clickedButton and clickedButton == pattern[currentStep]:
+                # pushed correct button
+                flashButtonAnimation(clickedButton)
+                currentStep += 1
+                lastClickTime = time.time()
+
+                if currentStep == len(pattern):
+                    # pused last button in pattern
+                    changeBackgroundAnimation()
+                    score += 1
+                    waitingForInput = False
+                    currentStep = 0 # reset back to 1st step
+
+            elif (clickedButton and clickedButton != pattern[currentStep]) or (currentStep != 0 and time.time() - TIMEOUT> lastClickTIme):
+                # wrong or timeout 
+                gameOverAnimation()
+                # reset variable for new game:
+                pattern = []
+                currentStep = 0
+                waitingForInput = False
+                score = 0
+                pygame.time.wait(1000)
+                changeBackgroundAnimation()
+
+        pygame.display.update()
+        FPSCLOCK.tick(FPS)
+
+if __name__ == '__main__':
+    main()
+
+
+
+
+
+
+
