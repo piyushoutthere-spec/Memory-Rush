@@ -28,6 +28,9 @@ YELLOW = (155,155,0)
 DARKGRAY= (40,40,40)
 bgColor = BLACK
 
+STARTBUTTON= pygame.Rect(370,520,160,40)
+RESTARTBUTTON = pygame.Rect(540,520,160,40)
+
 XMARGIN = int((WINDOWWIDTH - (2*BUTTONSIZE)-BUTTONGAPSIZE)/2)
 YMARGIN = int((WINDOWHEIGHT-(2*BUTTONSIZE)-BUTTONGAPSIZE)/2)
 
@@ -59,6 +62,12 @@ def main():
         clickedButton = None 
         DISPLAYSURF.fill(bgColor)
         drawButtons()
+
+        pygame.draw.rect(DISPLAYSURF,GREEN,STARTBUTTON)
+        pygame.draw.rect(DISPLAYSURF,BLUE,RESTARTBUTTON)
+
+        startSurf = BASICFONT.render("Start Game",True,WHITE)
+        restartSurf = BASICFONT.render("Restart",True,WHITE)
 
         scoreSurf = BASICFONT.render('Score: ' + str(score),1,WHITE)
         scoreRect = scoreSurf.get_rect()
@@ -105,7 +114,7 @@ def main():
                     waitingForInput = False
                     currentStep = 0 # reset back to 1st step
 
-            elif (clickedButton and clickedButton != pattern[currentStep]) or (currentStep != 0 and time.time() - TIMEOUT> lastClickTIme):
+            elif (clickedButton and clickedButton != pattern[currentStep]) or (currentStep != 0 and time.time() - TIMEOUT> lastClickTime):
                 # wrong or timeout 
                 gameOverAnimation()
                 # reset variable for new game:
@@ -175,13 +184,42 @@ def changeBackgroundAnimation(animationSpeed=40):
         checkForQuit()
         DISPLAYSURF.fill(bgColor)
 
-        newBgSurf.fill(r,g,b,alpha)
+        newBgSurf.fill((r,g,b,alpha))
         DISPLAYSURF.blit(newBgSurf,(0,0))
         drawButtons() # redraw the button on top
 
         pygame.display.update()
         FPSCLOCK.tick(FPS)
-    bgColor = newBgColor                                      
+    bgColor = newBgColor
+
+def gameOverAnimation(color=WHITE, animationSpeed=50):
+    origSurf=DISPLAYSURF.copy()
+    flashSurf = pygame.Surface(DISPLAYSURF.get_size())
+    flashSurf = flashSurf.convert_alpha()
+    r,g,b= color
+    for i in range(3): # all 3 flash
+        for start,end,step in((0,255,1),(255,0,-1)):
+            for alpha in range(start,end,animationSpeed*step):
+                # alpha means transpareny. 255 is opaque, 0 is invisible
+                checkForQuit()
+                flashSurf.fill((r,g,b,alpha))
+                DISPLAYSURF.blit(origSurf,(0,0))
+                DISPLAYSURF.blit(flashSurf,(0,0))
+                drawButtons()
+                pygame.display.update()
+                FPSCLOCK.tick(FPS)
+
+def getButtonClicked(x,y):
+    if YELLOWRECT.collidepoint((x,y)):
+        return YELLOW
+    elif BLUERECT.collidepoint((x,y)):
+        return BLUE
+    elif REDRECT.collidepoint((x,y)):
+        return RED
+    elif GREENRECT.collidepoint((x,y)):
+        return GREEN
+    return None                    
+
 
 
 if __name__ == '__main__':
