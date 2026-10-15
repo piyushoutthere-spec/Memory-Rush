@@ -122,7 +122,7 @@ def main():
             waitingForInput = True
         else:
             # w8 for player to enter
-            if clickedButton is not None and clickedButton == pattern[currentStep]:
+            if clickedButton is not None and currentStep < len(pattern) and clickedButton == pattern[currentStep]:
                 # pushed correct button
                 flashButtonAnimation(clickedButton)
                 currentStep += 1
