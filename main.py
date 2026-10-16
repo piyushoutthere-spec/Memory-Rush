@@ -122,32 +122,42 @@ def main():
             waitingForInput = True
         else:
             # w8 for player to enter
-            if clickedButton is not None and currentStep < len(pattern) and clickedButton == pattern[currentStep]:
-                # pushed correct button
-                flashButtonAnimation(clickedButton)
-                currentStep += 1
-                lastClickTime = time.time()
+            if clickedButton is not None:
+                if currentStep >= len(pattern) or clickedButton != pattern[currentStep]:
+                    # wrong button pressed
+                    gameOverAnimation()
 
-                if currentStep == len(pattern):
-                    # pused last button in pattern
-                    changeBackgroundAnimation()
-                    score += 1
+                    pattern=[]
+                    currentStep=0
                     waitingForInput = False
-                    currentStep = 0 # reset back to 1st step
+                    score = 0
+                    gameStarted = False
 
-            elif (
-                clickedButton is not None and clickedButton != pattern[currentStep]) or (currentStep != 0 and time.time() - lastClickTime> TIMEOUT):
-                # wrong or timeout 
+                    pygame.time.wait(1000)
+                    changeBackgroundAnimation()
+
+                else:
+                    #correct button
+                    flashButtonAnimation(clickedButton)
+                    currentStep += 1
+                    lastClickTime = time.time()
+
+                    if currentStep == len(pattern):
+                        changeBackgroundAnimation()
+                        score += 1
+                        waitingForInput = False
+                        currentStep = 0
+            elif currentStep != 0 and time.time() - lastClickTime > TIMEOUT:
+                # player took too long
                 gameOverAnimation()
-                # reset variable for new game:
                 pattern = []
                 currentStep = 0
                 waitingForInput = False
                 score = 0
                 gameStarted = False
+
                 pygame.time.wait(1000)
                 changeBackgroundAnimation()
-
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
